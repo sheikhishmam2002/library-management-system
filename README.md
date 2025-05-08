@@ -285,60 +285,32 @@ Write a query to update the status of books in the books table to "Yes" when the
 
 
 ```sql
+-- inserting a sample record
+INSERT INTO return_status (return_id, issued_id, return_date, return_book_name, return_book_isbn)
+VALUES ('RS150', 'IS150', CURDATE(), 'The Alchemist', '978-0-307-58837-1');
 
-CREATE OR REPLACE PROCEDURE add_return_records(p_return_id VARCHAR(10), p_issued_id VARCHAR(10), p_book_quality VARCHAR(10))
-LANGUAGE plpgsql
-AS $$
+-- checking before updating book status
+SELECT * FROM books WHERE isbn = '978-0-307-58837-1';
 
-DECLARE
-    v_isbn VARCHAR(50);
-    v_book_name VARCHAR(80);
-    
+-- Creating Stored Procedure
+DELIMITER $$
+
+CREATE PROCEDURE update_book_status_on_return()
 BEGIN
-    -- all your logic and code
-    -- inserting into returns based on users input
-    INSERT INTO return_status(return_id, issued_id, return_date, book_quality)
-    VALUES
-    (p_return_id, p_issued_id, CURRENT_DATE, p_book_quality);
-
-    SELECT 
-        issued_book_isbn,
-        issued_book_name
-        INTO
-        v_isbn,
-        v_book_name
-    FROM issued_status
-    WHERE issued_id = p_issued_id;
-
-    UPDATE books
-    SET status = 'yes'
-    WHERE isbn = v_isbn;
-
-    RAISE NOTICE 'Thank you for returning the book: %', v_book_name;
+	UPDATE books b
+	JOIN return_status rs ON b.isbn = rs.return_book_isbn
+	SET b.status = 'Yes';
     
-END;
-$$
+    SELECT ROW_COUNT() AS books_updated;
+END $$
 
+DELIMITER ;
 
--- Testing FUNCTION add_return_records
+-- Calling the procedure
+CALL update_book_status_on_return();
 
-issued_id = IS135
-ISBN = WHERE isbn = '978-0-307-58837-1'
-
-SELECT * FROM books
-WHERE isbn = '978-0-307-58837-1';
-
-SELECT * FROM issued_status
-WHERE issued_book_isbn = '978-0-307-58837-1';
-
-SELECT * FROM return_status
-WHERE issued_id = 'IS135';
-
--- calling function 
-CALL add_return_records('RS138', 'IS135', 'Good');
-
--- calling function 
-CALL add_return_records('RS148', 'IS140', 'Good');
+-- Verifying the update
+SELECT * FROM books WHERE isbn = '978-0-307-58837-1';
 
 ```
 
